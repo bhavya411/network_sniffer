@@ -82,4 +82,22 @@ impl DatabaseConnection {
         // let count:i64 = rows.get(0);
         //Ok(count)
     }
+    pub async fn get_network_list_by_protocol(&self, protocol: String) -> Result<Vec<PacketData>, Box<dyn Error>> {
+        let select_query = sqlx::query(FILTER_BY_PROTOCOL)
+            .bind(protocol);
+        let rows = select_query.fetch_all(&self.pool).await?;
+
+        let items: Vec<PacketData> = rows
+            .into_iter()
+            .map(|row| PacketData {
+                ip_source: row.get("ip_source"),
+                source_port: row.get("source_port"),
+                ip_destination: row.get("ip_destination"),
+                destination_port: row.get("destination_port"),
+                packet_size: row.get("packet_size"),
+                protocol: row.get("protocol"),
+            })
+            .collect();
+        Ok(items)
+    }
 }

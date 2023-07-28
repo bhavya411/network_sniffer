@@ -3,3 +3,4 @@ pub static INSERT_QUERY: &str = "insert into network_information (ip_source,sour
 pub static READ_ALL_QUERY: &str = "select * from network_information";
 pub static GET_BY_ID_QUERY: &str = "select * from network_information where serial_no = $1";
 pub static COUNT_TRAFFIC_QUERY: &str = "select * from network_information where ip_source = $1";
+pub static FILTER_BY_PROTOCOL: &str = "select * from network_information where protocol = $1";

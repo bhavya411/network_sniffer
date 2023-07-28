@@ -110,8 +110,15 @@ async fn api_calls(db_connection: DatabaseConnection) {
         .and(db_filter.clone())
         .and_then(get_traffic);
 
-    let routes = add_items.or(get_items).or(get_items_by_serial_number).or(get_traffic_by_ip_source);
-    warp::serve(routes).run(([127, 0, 0, 1], 8080)).await
+    let get_list_by_protocol = warp::get()
+        .and(warp::path("api"))
+        .and(warp::path!("network" / "get_protocol" / String))
+        .and(warp::path::end())
+        .and(db_filter.clone())
+        .and_then(filter_by_protocol);
+
+    let routes = add_items.or(get_items).or(get_items_by_serial_number).or(get_traffic_by_ip_source)
+        .or(get_list_by_protocol);    warp::serve(routes).run(([127, 0, 0, 1], 8080)).await
 }
 #[tokio::main]
 async fn main() {

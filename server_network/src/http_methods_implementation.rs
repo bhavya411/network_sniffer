@@ -40,6 +40,15 @@ pub async fn get_traffic(
     Ok(warp::reply::json(&item))
 
 }
+pub async fn filter_by_protocol(
+    protocol: String,
+    db: DatabaseConnection,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let item = db.get_network_list_by_protocol(protocol).await.expect("Protocol not found");
+    Ok(warp::reply::json(&item))
+
+}
+
 pub fn json_body() -> impl Filter<Extract = (PacketData,), Error = warp::Rejection> + Clone {
     warp::body::content_length_limit(1024 * 16).and(warp::body::json())
 }
