@@ -6,11 +6,11 @@ mod query;
 use crate::database::DatabaseConnection;
 use dotenv::dotenv;
 use std::env;
-use warp::Filter;
+use warp::{Filter, Rejection};
 use http_methods_implementation::*;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
-use crate::information::PacketData;
+use crate::information::*;
 use async_std::task;
 use crossbeam::scope;
 
@@ -77,7 +77,9 @@ async fn server_network(db_clone: DatabaseConnection) {
     })
         .unwrap(); // Ensure all threads are joined before the function exits
 }
-
+fn pagination_filter() -> impl Filter<Extract = (PaginationParams,), Error = Rejection> + Clone {
+    warp::query::<PaginationParams>()
+}
 async fn api_calls(db_connection: DatabaseConnection) {
 
     let db_filter = warp::any().map(move || db_connection.clone());
@@ -94,6 +96,7 @@ async fn api_calls(db_connection: DatabaseConnection) {
         .and(warp::path("network"))
         .and(warp::path::end())
         .and(db_filter.clone())
+        .and(pagination_filter())
         .and_then(get_all_networks_list);
 
     let get_items_by_serial_number = warp::get()
@@ -108,6 +111,7 @@ async fn api_calls(db_connection: DatabaseConnection) {
         .and(warp::path!("network" / "get_ip" / String))
         .and(warp::path::end())
         .and(db_filter.clone())
+        .and(pagination_filter())
         .and_then(get_traffic);
 
     let get_list_by_protocol = warp::get()
@@ -115,10 +119,12 @@ async fn api_calls(db_connection: DatabaseConnection) {
         .and(warp::path!("network" / "get_protocol" / String))
         .and(warp::path::end())
         .and(db_filter.clone())
+        .and(pagination_filter())
         .and_then(filter_by_protocol);
 
     let routes = add_items.or(get_items).or(get_items_by_serial_number).or(get_traffic_by_ip_source)
-        .or(get_list_by_protocol);    warp::serve(routes).run(([127, 0, 0, 1], 8080)).await
+        .or(get_list_by_protocol);
+    warp::serve(routes).run(([127, 0, 0, 1], 8080)).await
 }
 #[tokio::main]
 async fn main() {
