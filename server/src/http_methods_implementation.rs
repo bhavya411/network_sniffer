@@ -28,9 +28,11 @@ pub async fn get_traffic(
     ip_source: String,
     db: DatabaseConnection,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    let item = db.get_traffic_of_ip_source(ip_source).await.expect("Ip Source not found");
+    let item = db
+        .get_traffic_of_ip_source(ip_source)
+        .await
+        .expect("Ip Source not found");
     Ok(warp::reply::json(&item))
-
 }
 
 pub fn json_body() -> impl Filter<Extract = (PacketStructure,), Error = warp::Rejection> + Clone {

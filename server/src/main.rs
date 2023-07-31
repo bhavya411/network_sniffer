@@ -92,17 +92,10 @@ async fn api_methods(db_connection: DatabaseConnection) {
 
     let get_by_traffic_by_source_ip = warp::get()
         .and(warp::path("api"))
-        .and(warp::path!("network" /  String ))
+        .and(warp::path!("network" / String))
         .and(warp::path::end())
         .and(db_filter.clone())
         .and_then(get_traffic);
-
-
-
-
-
-
-
 
     let routes = get_items.or(get_by_traffic_by_source_ip);
 

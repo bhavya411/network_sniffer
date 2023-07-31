@@ -68,20 +68,25 @@ impl DatabaseConnection {
     //     Ok(items)
     // }
 
-    pub async fn get_traffic_of_ip_source(&self, source_ip: String) -> Result<Vec<PacketStructure>, Box<dyn Error>> {
-        let select_query = sqlx::query(COUNT_TRAFFIC_QUERY)
-            .bind(source_ip);
+    pub async fn get_traffic_of_ip_source(
+        &self,
+        source_ip: String,
+    ) -> Result<Vec<PacketStructure>, Box<dyn Error>> {
+        let select_query = sqlx::query(COUNT_TRAFFIC_QUERY).bind(source_ip);
 
         let rows = select_query.fetch_all(&self.pool).await?;
 
-            let packet_structure :Vec<PacketStructure> = rows.into_iter().map(|row| PacketStructure {
+        let packet_structure: Vec<PacketStructure> = rows
+            .into_iter()
+            .map(|row| PacketStructure {
                 source_ip: row.get("source_ip"),
                 source_port: row.get("source_port"),
                 destination_ip: row.get("destination_ip"),
                 destination_port: row.get("destination_port"),
                 packet_size: row.get("packet_size"),
                 protocol: row.get("protocol"),
-            }).collect();
+            })
+            .collect();
         Ok(packet_structure)
     }
 }
