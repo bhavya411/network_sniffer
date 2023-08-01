@@ -1,7 +1,6 @@
 use crate::database::DatabaseConnection;
 use crate::information::*;
 use warp::{Filter, Rejection};
-use crate::pagination::pagination_data;
 
 pub async fn post_networks_list(
     item: PacketData,
@@ -17,9 +16,10 @@ pub async fn get_all_networks_list(
     db: DatabaseConnection,
     pagination_params: PaginationParams,
 ) -> Result<impl warp::Reply, Rejection> {
+    let limit = pagination_params.per_page;
+    let offset = (pagination_params.page - 1) * limit;
     // Read all items from the database
-    let all_data = db.read_items().await.expect("Failed to read data");
-    let api_response = pagination_data(all_data,pagination_params);
+    let api_response = db.read_items(limit as i32, offset as i32).await.expect("Failed to read data");
     Ok(warp::reply::json(&api_response))
 }
 pub async fn get_network_list_by_serial_number(
@@ -34,8 +34,9 @@ pub async fn get_traffic(
     db: DatabaseConnection,
     pagination_params: PaginationParams,
 ) -> Result<impl warp::Reply, Rejection> {
-    let item = db.get_traffic_of_ip_source(ip_source).await.expect("Ip Source not found");
-    let api_response = pagination_data(item, pagination_params);
+    let limit = pagination_params.per_page;
+    let offset = (pagination_params.page - 1) * limit;
+    let api_response = db.get_traffic_of_ip_source(ip_source,limit as i32, offset as i32).await.expect("Ip Source not found");
     Ok(warp::reply::json(&api_response))
 }
 pub async fn filter_by_protocol(
@@ -43,8 +44,9 @@ pub async fn filter_by_protocol(
     db: DatabaseConnection,
     pagination_params: PaginationParams,
 ) -> Result<impl warp::Reply, Rejection> {
-    let item = db.get_network_list_by_protocol(protocol).await.expect("Protocol not found");
-    let api_response = pagination_data(item, pagination_params);
+    let limit = pagination_params.per_page;
+    let offset = (pagination_params.page - 1) * limit;
+    let api_response = db.get_network_list_by_protocol(protocol,limit as i32, offset as i32).await.expect("Protocol not found");
     Ok(warp::reply::json(&api_response))
 
 }

@@ -2,7 +2,6 @@ mod database;
 mod http_methods_implementation;
 mod information;
 mod query;
-mod pagination;
 
 use crate::database::DatabaseConnection;
 use dotenv::dotenv;
