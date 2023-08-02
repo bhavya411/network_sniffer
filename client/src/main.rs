@@ -93,7 +93,7 @@ fn packet_capture(mut write_stream: TcpStream) {
 
                             write_stream
                                 .write_all(packet_string.as_bytes())
-                                .expect("Failed to send packet");
+                                .expect("Failed to se1nd packet");
                             write_stream.flush().expect("Failed to flush");
 
                             print!("source port -> {} ", source_port);
@@ -146,7 +146,6 @@ fn packet_capture(mut write_stream: TcpStream) {
                         pnet::packet::ipv6::Ipv6Packet::new(packet_type.payload()).expect("error");
 
                     match ipv6_packet.get_next_header() {
-
                         pnet::packet::ip::IpNextHeaderProtocols::Tcp => {
                             let tcp_packet =
                                 pnet::packet::tcp::TcpPacket::new(packet).expect("error");
@@ -237,7 +236,6 @@ fn main() {
 
         let mut buffer = [0; 1024];
         match stream.read(&mut buffer) {
-
             Ok(size) => {
                 let echo = String::from_utf8_lossy(&buffer[..size]);
                 println!("Received echo: {}", echo);
