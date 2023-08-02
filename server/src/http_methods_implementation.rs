@@ -1,14 +1,28 @@
 use crate::database::DatabaseConnection;
-use crate::models::PacketStructure;
+use crate::models::PaginateStructure;
 use warp::Filter;
 
 pub async fn get_all_networks_list(
     db: DatabaseConnection,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    let data = db.read_items().await.expect("Failed to read data");
-    println!("Data -> {:?}", data);
+    let data = db.read_all_items().await.expect("Failed to read data");
     Ok(warp::reply::json(&data))
 }
+
+pub async fn get_networks_list_in_pages(
+    db: DatabaseConnection,
+    paginate_structure: PaginateStructure,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let data = db
+        .read_items(paginate_structure)
+        .await
+        .expect("Failed to read data");
+    for page in &data {
+        println!("page data  -> {:?}", page);
+    }
+    Ok(warp::reply::json(&data))
+}
+
 //
 // pub async fn get_network_list_by_serial_number(
 //     serial_no: i32,
@@ -24,17 +38,50 @@ pub async fn get_all_networks_list(
 //     }
 // }
 
-pub async fn get_traffic(
+pub async fn get_traffic_source_ip(
     ip_source: String,
     db: DatabaseConnection,
+    paginate_structure: PaginateStructure,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    let item = db
-        .get_traffic_of_ip_source(ip_source)
+    let packet = db
+        .get_traffic_of_ip_source(ip_source, paginate_structure)
         .await
         .expect("Ip Source not found");
-    Ok(warp::reply::json(&item))
+    Ok(warp::reply::json(&packet))
 }
 
+pub async fn get_traffic_source_port(
+    source_port: i64,
+    db: DatabaseConnection,
+    paginate_structure: PaginateStructure,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let packet_structure = db
+        .get_traffic_of_source_port(source_port, paginate_structure)
+        .await
+        .expect("Ip Source_Port not found");
+
+    Ok(warp::reply::json(&packet_structure))
+}
+
+pub async fn get_traffic_protocol(
+    protocol: String,
+    db: DatabaseConnection,
+    paginate_structure: PaginateStructure,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let packet_structure = db
+        .get_traffic_of_protocol(protocol, paginate_structure)
+        .await
+        .expect("Ip protocol not found");
+    Ok(warp::reply::json(&packet_structure))
+}
+
+/*
 pub fn json_body() -> impl Filter<Extract = (PacketStructure,), Error = warp::Rejection> + Clone {
-    warp::body::content_length_limit(1024 * 16).and(warp::body::json())
+warp::body::content_length_limit(1024*16)
+.and(warp::body::json())
+}
+*/
+
+pub fn paginate() -> impl Filter<Extract = (PaginateStructure,), Error = warp::Rejection> + Clone {
+    warp::query::<PaginateStructure>()
 }

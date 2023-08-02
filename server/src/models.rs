@@ -10,3 +10,9 @@ pub struct PacketStructure {
     pub protocol: String,
     pub packet_size: i64,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct PaginateStructure {
+    pub page_number: i32,
+    pub page_length: i32,
+}
