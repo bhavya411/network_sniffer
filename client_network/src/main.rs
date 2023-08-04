@@ -9,10 +9,6 @@ use std::io;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 
-fn is_printable(byte: u8) -> bool {
-    byte >= 0x20 && byte <= 0x7E
-}
-
 lazy_static! {
     // Retrieve the list of available network interfaces
     static ref INTERFACES: Vec<NetworkInterface> = datalink::interfaces();
@@ -47,7 +43,7 @@ fn get_active_interface() -> &'static NetworkInterface {
 //         }
 //     }
 //     payload_readable
-// }
+// }r
 fn get_json_data(
     source_ip: String,
     destination_ip: String,
@@ -76,7 +72,7 @@ fn get_json_data(
     json_data
 }
 fn process_ipv4_tcp_packet(ethernet: &TcpPacket, ipv4: &Ipv4Packet) -> String {
-    if let Some(tcp) = pnet::packet::tcp::TcpPacket::new(ipv4.payload()) {
+    if let Some(tcp) = TcpPacket::new(ipv4.payload()) {
         let source_ip = ipv4.get_source();
         let destination_ip = ipv4.get_destination();
         let source_port = tcp.get_source();
@@ -99,7 +95,7 @@ fn process_ipv4_tcp_packet(ethernet: &TcpPacket, ipv4: &Ipv4Packet) -> String {
 }
 
 fn process_ipv4_udp_packet(ethernet: &UdpPacket, ipv4: &Ipv4Packet) -> String {
-    if let Some(udp) = pnet::packet::udp::UdpPacket::new(ipv4.payload()) {
+    if let Some(udp) = UdpPacket::new(ipv4.payload()) {
         let source_ip = ipv4.get_source();
         let destination_ip = ipv4.get_destination();
         let source_port = udp.get_source();
@@ -122,7 +118,7 @@ fn process_ipv4_udp_packet(ethernet: &UdpPacket, ipv4: &Ipv4Packet) -> String {
 }
 
 fn process_ipv6_tcp_packet(ethernet: &TcpPacket, ipv6: &Ipv6Packet) -> String {
-    if let Some(tcp) = pnet::packet::tcp::TcpPacket::new(ipv6.payload()) {
+    if let Some(tcp) = TcpPacket::new(ipv6.payload()) {
         let source_ip = ipv6.get_source();
         let destination_ip = ipv6.get_destination();
         let source_port = tcp.get_source();
@@ -145,7 +141,7 @@ fn process_ipv6_tcp_packet(ethernet: &TcpPacket, ipv6: &Ipv6Packet) -> String {
 }
 
 fn process_ipv6_udp_packet(ethernet: &UdpPacket, ipv6: &Ipv6Packet) -> String {
-    if let Some(udp) = pnet::packet::udp::UdpPacket::new(ipv6.payload()) {
+    if let Some(udp) = UdpPacket::new(ipv6.payload()) {
         let source_ip = ipv6.get_source();
         let destination_ip = ipv6.get_destination();
         let source_port = udp.get_source();
@@ -178,14 +174,14 @@ fn packet_capture(mut write_stream: TcpStream) {
         match channel.next() {
             Ok(packet) => {
                 // Parse the Ethernet packet
-                let ethernet = pnet::packet::ethernet::EthernetPacket::new(packet).unwrap();
+                let ethernet = ethernet::EthernetPacket::new(packet).unwrap();
                 // Check if the EtherType indicates IPv4
-                if ethernet.get_ethertype() == pnet::packet::ethernet::EtherTypes::Ipv4 {
+                if ethernet.get_ethertype() == ethernet::EtherTypes::Ipv4 {
                     // Extract the IPv4 packet
-                    if let Some(ipv4) = pnet::packet::ipv4::Ipv4Packet::new(ethernet.payload()) {
+                    if let Some(ipv4) = Ipv4Packet::new(ethernet.payload()) {
                         // Check if the protocol is TCP or UDP
                         match ipv4.get_next_level_protocol() {
-                            pnet::packet::ip::IpNextHeaderProtocols::Tcp => {
+                            ip::IpNextHeaderProtocols::Tcp => {
                                 if let Some(tcp) = TcpPacket::new(ipv4.payload()) {
                                     let json_data = process_ipv4_tcp_packet(&tcp, &ipv4);
                                     write_stream
@@ -194,7 +190,7 @@ fn packet_capture(mut write_stream: TcpStream) {
                                     write_stream.flush().expect("Failed to flush");
                                 }
                             }
-                            pnet::packet::ip::IpNextHeaderProtocols::Udp => {
+                            ip::IpNextHeaderProtocols::Udp => {
                                 if let Some(udp) = UdpPacket::new(ipv4.payload()) {
                                     let json_data = process_ipv4_udp_packet(&udp, &ipv4);
                                     write_stream
@@ -208,12 +204,12 @@ fn packet_capture(mut write_stream: TcpStream) {
                             }
                         }
                     }
-                } else if ethernet.get_ethertype() == pnet::packet::ethernet::EtherTypes::Ipv6 {
+                } else if ethernet.get_ethertype() == ethernet::EtherTypes::Ipv6 {
                     // Extract the IPv4 packet
-                    if let Some(ipv6) = pnet::packet::ipv6::Ipv6Packet::new(ethernet.payload()) {
+                    if let Some(ipv6) = Ipv6Packet::new(ethernet.payload()) {
                         // Check if the protocol is TCP or UDP
                         match ipv6.get_next_header() {
-                            pnet::packet::ip::IpNextHeaderProtocols::Tcp => {
+                            ip::IpNextHeaderProtocols::Tcp => {
                                 if let Some(tcp) = TcpPacket::new(ipv6.payload()) {
                                     let json_data = process_ipv6_tcp_packet(&tcp, &ipv6);
                                     write_stream
@@ -222,7 +218,7 @@ fn packet_capture(mut write_stream: TcpStream) {
                                     write_stream.flush().expect("Failed to flush");
                                 }
                             }
-                            pnet::packet::ip::IpNextHeaderProtocols::Udp => {
+                            ip::IpNextHeaderProtocols::Udp => {
                                 if let Some(udp) = UdpPacket::new(ipv6.payload()) {
                                     let json_data = process_ipv6_udp_packet(&udp, &ipv6);
                                     write_stream

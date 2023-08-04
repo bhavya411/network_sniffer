@@ -30,8 +30,8 @@ impl DatabaseConnection {
         Ok(())
     }
 
-    pub async fn read_items(&self) -> Result<Vec<PacketData>, Box<dyn Error>> {
-        let select_query = sqlx::query(READ_ALL_QUERY);
+    pub async fn read_items(&self,limit: i32,offset: i32) -> Result<Vec<PacketData>, Box<dyn Error>> {
+        let select_query = sqlx::query(READ_ALL_QUERY).bind(limit).bind(offset);
         let rows = select_query.fetch_all(&self.pool).await?;
 
         let items: Vec<PacketData> = rows
@@ -61,9 +61,9 @@ impl DatabaseConnection {
         });
          Ok(items)
      }
-    pub async fn get_traffic_of_ip_source(&self, ip_source: String) -> Result<Vec<PacketData>, Box<dyn Error>> {
-        let select_query = sqlx::query(COUNT_TRAFFIC_QUERY)
-             .bind(ip_source);
+    pub async fn get_traffic_of_ip_source(&self, ip_source: String, limit: i32, offset: i32) -> Result<Vec<PacketData>, Box<dyn Error>> {
+        let select_query = sqlx::query(COUNT_TRAFFIC_QUERY).bind(ip_source) .bind(limit)
+            .bind(offset);
         let rows = select_query.fetch_all(&self.pool).await?;
 
         let items: Vec<PacketData> = rows
@@ -78,13 +78,10 @@ impl DatabaseConnection {
             })
             .collect();
         Ok(items)
-        // let rows = select_query.fetch_one(&self.pool).await?;
-        // let count:i64 = rows.get(0);
-        //Ok(count)
     }
-    pub async fn get_network_list_by_protocol(&self, protocol: String) -> Result<Vec<PacketData>, Box<dyn Error>> {
+    pub async fn get_network_list_by_protocol(&self, protocol: String, limit: i32, offset: i32) -> Result<Vec<PacketData>, Box<dyn Error>> {
         let select_query = sqlx::query(FILTER_BY_PROTOCOL)
-            .bind(protocol);
+            .bind(protocol).bind(limit).bind(offset);
         let rows = select_query.fetch_all(&self.pool).await?;
 
         let items: Vec<PacketData> = rows

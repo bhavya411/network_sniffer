@@ -15,17 +15,3 @@ pub struct PaginationParams {
     pub per_page: usize,
 }
 
-#[derive(Serialize)]
-pub struct ApiResponse<T> {
-    pub data: Vec<T>,
-    pub pagination: PaginationInfoResponse,
-}
-
-#[derive(Serialize)]
-pub struct PaginationInfoResponse {
-    pub total_items: usize,
-    pub per_page: usize,
-    pub current_page: usize,
-    pub total_pages: usize,
-}
-
