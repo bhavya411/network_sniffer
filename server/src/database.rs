@@ -1,14 +1,16 @@
-use crate::models::{PacketStructure, PaginateStructure};
+use crate::models::*;
 use crate::query::*;
+use mockall::automock;
 use sqlx::{Pool, Postgres, Row};
 use std::error::Error;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DatabaseConnection {
     pool: Pool<Postgres>,
 }
-
+#[automock]
 impl DatabaseConnection {
+
     pub(crate) async fn new(url: &str) -> DatabaseConnection {
         let pool = sqlx::postgres::PgPool::connect(url).await.unwrap();
         sqlx::migrate!("./migrations")
@@ -61,7 +63,6 @@ impl DatabaseConnection {
     pub async fn read_all_items(&self) -> Result<Vec<PacketStructure>, Box<dyn Error>> {
         let select_query = sqlx::query(QUERY_OF_READ_ALL);
         let rows = select_query.fetch_all(&self.pool).await?;
-
         let packet_structure: Vec<PacketStructure> = rows
             .into_iter()
             .map(|row| PacketStructure {
@@ -106,7 +107,6 @@ impl DatabaseConnection {
             .bind(offset);
 
         let rows = select_query.fetch_all(&self.pool).await?;
-
         let packet_structure: Vec<PacketStructure> = rows
             .into_iter()
             .map(|row| PacketStructure {
@@ -173,5 +173,84 @@ impl DatabaseConnection {
             })
             .collect();
         Ok(packet_structure)
+    }
+}
+
+mod test {
+    use serde::de::Unexpected::Str;
+    use super::*;
+
+    #[tokio::test]
+    async fn test_read_items() {
+        let vector_of_packet = PacketStructure {
+            source_ip: "192.168.0.1".parse().unwrap(),
+            source_port: 256,
+            destination_ip: "224.0.0.251".to_string(),
+            destination_port: 24064,
+            protocol: "Udp".to_string(),
+            packet_size: 72,
+        };
+        let db_connection =
+            DatabaseConnection::new("postgres://postgres:root@localhost:5432/mydb").await;
+        let binding = db_connection.clone();
+        let b = binding
+            .read_items(PaginateStructure {
+                page_number: 1,
+                page_length: 1,
+            })
+            .await;
+        assert_eq!(b.unwrap()[0], vector_of_packet)
+    }
+
+    #[tokio::test]
+    async fn test_get_traffic_of_protocol() {
+        let vector_of_packet = PacketStructure {
+            source_ip: "192.168.0.151".parse().unwrap(),
+            source_port: 12510,
+            destination_ip: "142.250.207.237".to_string(),
+            destination_port: 19237,
+            protocol: "Tcp".to_string(),
+            packet_size: 91,
+        };
+        let db_connection =
+            DatabaseConnection::new("postgres://postgres:root@localhost:5432/mydb").await;
+        let binding = db_connection.clone();
+        let b = binding
+            .get_traffic_of_protocol(
+                "Tcp".to_string(),
+                PaginateStructure {
+                    page_number: 1,
+                    page_length: 1,
+                },
+            )
+            .await;
+        assert_eq!(b.unwrap()[0], vector_of_packet)
+    }
+
+    #[tokio::test]
+    async fn test_get_traffic_of_source_port() {
+        let vector_of_packet = PacketStructure {
+            source_ip: "192.168.0.1".parse().unwrap(),
+            source_port: 256,
+            destination_ip: "224.0.0.251".to_string(),
+            destination_port: 24064,
+            protocol: "Udp".to_string(),
+            packet_size: 72,
+        };
+
+        let st = format!("postgres://postgres:root@localhost:5432/mydb");
+        let db_connection =
+            DatabaseConnection::new(&st).await;
+        let binding = db_connection.clone();
+        let b = binding
+            .get_traffic_of_source_port(
+                256,
+                PaginateStructure {
+                    page_number: 1,
+                    page_length: 1,
+                },
+            )
+            .await;
+        assert_eq!(b.unwrap()[0], vector_of_packet)
     }
 }

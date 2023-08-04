@@ -1,7 +1,8 @@
 mod database;
 mod http_methods_implementation;
-mod models;
 mod query;
+mod models;
+
 use crate::database::*;
 use crate::http_methods_implementation::*;
 use crate::models::PacketStructure;
@@ -10,6 +11,7 @@ use async_std::task;
 use crossbeam::epoch::Pointable;
 use crossbeam::scope;
 use dotenv::dotenv;
+use mockall::*;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::io::{Read, Write};
@@ -52,6 +54,7 @@ async fn handle_client(mut stream: TcpStream, db_connection: &DatabaseConnection
         }
     } {}
 }
+
 async fn api_methods(db_connection: DatabaseConnection) {
     let db_filter = warp::any().map(move || db_connection.clone());
 
@@ -78,6 +81,7 @@ async fn api_methods(db_connection: DatabaseConnection) {
         .and(db_filter.clone())
         .and(paginate())
         .and_then(get_traffic_source_ip);
+
 
     let get_traffic_by_source_port = warp::get()
         .and(warp::path("api"))

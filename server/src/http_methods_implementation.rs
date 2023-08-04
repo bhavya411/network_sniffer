@@ -1,5 +1,6 @@
 use crate::database::DatabaseConnection;
-use crate::models::PaginateStructure;
+use crate::models::{DatabaseError, NoDataFound, PaginateStructure};
+use warp::reject::custom;
 use warp::Filter;
 
 pub async fn get_all_networks_list(
@@ -13,10 +14,15 @@ pub async fn get_networks_list_in_pages(
     db: DatabaseConnection,
     paginate_structure: PaginateStructure,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    let data = db
-        .read_items(paginate_structure)
-        .await
-        .expect("Failed to read data");
+    let data = match db.read_items(paginate_structure).await {
+        Ok(vec_data) => {
+            if vec_data.is_empty() {
+                return Err(custom(NoDataFound));
+            }
+            vec_data
+        }
+        Err(err) => return Err(custom(DatabaseError(err.to_string()))),
+    };
     for page in &data {
         println!("page data  -> {:?}", page);
     }
