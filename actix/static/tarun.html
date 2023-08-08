@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network Sniffer</title>
+    <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Network Sniffer</h1>
+
+        <div class="form-row justify-content-center mt-4">
+            <div class="col-auto">
+                <input type="text" class="form-control" id="filter" placeholder="Enter filter text...">
+            </div>
+            <div class="col-auto">
+                <select class="form-control" id="filter-column">
+                    <option value="all">All Columns</option>
+                    <option value="src_ip">Source IP</option>
+                    <option value="dst_ip">Destination IP</option>
+                    <option value="src_port">Source Port</option>
+                    <option value="dst_port">Destination Port</option>
+                    <option value="seq_number">Sequence Number</option>
+                    <option value="ack_number">Acknowledgment Number</option>
+                    <option value="flags">Flags</option>
+                    <option value="window_size">Window Size</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" onclick="applyFilter()">Apply Filter</button>
+            </div>
+        </div>
+
+        <div class="table-responsive mt-4">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Source IP</th>
+                        <th>Destination IP</th>
+                        <th>Source Port</th>
+                        <th>Destination Port</th>
+                        <th>Sequence Number</th>
+                        <th>Acknowledgment Number</th>
+                        <th>Flags</th>
+                        <th>Window Size</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table">
+                    <!-- Data will be dynamically populated here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center mt-4">
+            <button class="btn btn-secondary mr-2" onclick="prevPage()" id="prev-btn">Previous</button>
+            <span id="page-num">1</span>
+            <button class="btn btn-secondary ml-2" onclick="nextPage()" id="next-btn">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let data = []; // Variable to hold the fetched data
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let currentFilterColumn = "all";
+
+        async function fetchData() {
+            const response = await fetch("/json"); // Update the URL to match the API route in the Rust code
+            data = await response.json();
+            renderData();
+        }
+
+        function renderData() {
+            const filterText = document.getElementById("filter").value.trim().toLowerCase();
+            const filterColumn = document.getElementById("filter-column").value;
+
+            // Calculate the start and end index for the current page
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, data.length);
+
+            const table = document.getElementById("data-table");
+            table.innerHTML = "<tr><th>Source IP</th><th>Destination IP</th><th>Source Port</th><th>Destination Port</th><th>Sequence Number</th><th>Acknowledgment Number</th><th>Flags</th><th>Window Size</th></tr>";
+
+            for (let i = startIndex; i < endIndex; i++) {
+                const record = data[i];
+                const srcIp = record.src_ip || "-";
+                const dstIp = record.dst_ip || "-";
+
+                // Filter based on the selected column
+                if (filterColumn === "all" || record[filterColumn].toLowerCase().includes(filterText)) {
+                    const newRow = document.createElement("tr");
+                    newRow.innerHTML = `<td>${srcIp}</td><td>${dstIp}</td><td>${record.src_port}</td><td>${record.dst_port}</td><td>${record.seq_number}</td><td>${record.ack_number}</td><td>${record.flags}</td><td>${record.window_size}</td>`;
+                    table.appendChild(newRow);
+                }
+            }
+
+            // Update the "Previous" button state
+            const prevBtn = document.getElementById("prev-btn");
+            prevBtn.disabled = currentPage === 1;
+
+            // Update the "Next" button state
+            const nextBtn = document.getElementById("next-btn");
+            nextBtn.disabled = endIndex === data.length;
+
+            // Update the page number
+            const pageNum = document.getElementById("page-num");
+            pageNum.innerText = currentPage;
+        }
+
+        function applyFilter() {
+            currentPage = 1;
+            currentFilterColumn = document.getElementById("filter-column").value;
+            renderData();
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderData();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < Math.ceil(data.length / itemsPerPage)) {
+                currentPage++;
+                renderData();
+            }
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>
