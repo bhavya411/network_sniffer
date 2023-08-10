@@ -1,0 +1,65 @@
+body {
+    font-family: Arial, sans-serif;
+}
+/* Custom styles for the Network Sniffer web page */
+
+/* Center the content inside the container */
+.container {
+    padding: 20px;
+}
+
+/* Apply some margin at the top to separate the header from the content */
+.mt-5 {
+    margin-top: 3rem !important;
+}
+
+.mt-4 {
+    margin-top: 2rem !important;
+}
+
+/* Align the filter input and button in the center horizontally */
+.form-row.justify-content-center {
+    display: flex;
+    justify-content: center;
+}
+
+/* Add some spacing between the filter input and button */
+.form-control {
+    margin-right: 10px;
+}
+
+/* Adjust the margin between the pagination buttons and the table */
+.text-center.mt-4 {
+    margin-top: 2rem !important;
+}
+
+/* Disable the default button outline when active */
+.btn:focus, .btn:active:focus {
+    box-shadow: none !important;
+}
+
+/* Set the pagination buttons to have equal width */
+#prev-btn, #next-btn {
+    width: 120px;
+}
+
+/* Style the table header */
+.table thead th {
+    background-color: #343a40;
+    color: #ffffff;
+    border-color: #343a40;
+}
+
+/* Style the table rows */
+.table tbody tr:nth-of-type(odd) {
+    background-color: #f8f9fa;
+}
+
+/* Add some spacing to the pagination buttons */
+.mr-2 {
+    margin-right: 5px !important;
+}
+
+.ml-2 {
+    margin-left: 5px !important;
+}

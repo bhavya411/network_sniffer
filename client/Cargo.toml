@@ -1,0 +1,22 @@
+[package]
+name = "client"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = {version = "1", features = ["full"]}
+pnet = "0.34.0"
+serde = { version = "1.0", features = ["derive"] }
+bincode = "1.3.3"
+async-std = "1.12.0"
+
+[workspace]
+
+[[bin]]
+name = "mainfile"
+path= "./src/main.rs"
+
+
+
